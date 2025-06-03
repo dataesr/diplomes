@@ -1,8 +1,9 @@
 import os
 
 from application.server.main.logger import get_logger
-from inscrits.u3_apply_cleaning_functions import corrige
-from inscrits.u1_google_sheets import get_all_correctifs as u1
+from diplomes.u3_apply_cleaning_functions import corrige
+from diplomes.u1_google_sheets import get_all_correctifs as u1
+from diplomes.u4_generate_od_file import generate_od
 
 logger = get_logger(__name__)
 
@@ -28,6 +29,7 @@ def create_task_corrige(args):
                 # si google_sheets modifiées peut-être demander en paramètre si on recharge ou pas excel ?
                 # chargement_google_sheets= args.get('chargement_google_sheets')
                 corrige(cor_dict)
+                generate_od()
                 print("Ca marche", flush=True)
                 logger.debug(f'Done!')
         else:

@@ -23,7 +23,7 @@ def run_task_harvest():
     args = request.get_json(force=True)
     print("Test Views", flush=True)
     conn = redis.from_url(current_app.config['REDIS_URL'])
-    q = Queue(name='inscrits', connection=conn, default_timeout=default_timeout)
+    q = Queue(name='diplomes', connection=conn, default_timeout=default_timeout)
     task = q.enqueue(create_task_corrige, args)
     print("Test connexion", flush=True)
     response_object = {'status': 'success', 'data': {'task_id': task.get_id()}}

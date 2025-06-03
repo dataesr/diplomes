@@ -1,16 +1,14 @@
 import numpy as np
 import pandas as pd
 
-import diplomes.u1_google_sheets as u1
-# from application.server.main.logger import get_logger
+from application.server.main.logger import get_logger
 
-# logger = get_logger(__name__)
+logger = get_logger(__name__)
 
 pd.options.mode.chained_assignment = None
 
-
-ALL_RENTREES = list(range(2021, 2022))
-ALL_TYPES = ['culture', 'inge', 'priv', 'enq', 'ens', 'mana', 'result']
+ALL_RENTREES = list(range(2015, 2022))
+ALL_TYPES = ['result', 'inge', 'priv', 'ens', 'mana', 'enq26bis', 'culture']
 
 
 def fill_COMPOS(df):
@@ -112,10 +110,7 @@ def aplatir(conteneurs):
 
 
 def delete(df, cor_dic):
-    if "FLAG_SUP" in df.columns:
-        df.loc[(df.TYP_DIPL == 'PJ') & (df.INSPR == 'N') & (df.FLAG_SUP == 1), 'FLAG_SUP'] = 0
-        df = df.loc[df["FLAG_SUP"] == 0]
-    for c in cor_dic['delete']:
+    for c in cor_dic['deleter']:
         if c['ETABLI_DIFFUSION'] != '':
             df = df[~((df['RENTREE'] == c['RENTREE']) & (df['ETABLI_DIFFUSION'] == c['ETABLI_DIFFUSION']) & (
                     df['SOURCE'] == c['SOURCE']))]
@@ -131,11 +126,11 @@ def delete(df, cor_dic):
 
 def corrige_ETABLI_DIFFUSION(df, cor_dict):
     if 'FLAG_MEEF' in df.columns:
-        mask = (df.SOURCE == 'inscri') & (df.RENTREE == '2014')
+        mask = (df.RENTREE == '2014')
         df.loc[mask & (df.ETABLI_DIFFUSION == "UNIVERSITE NELLE CALEDONIE") & (
-                df.FLAG_MEEF > 0), 'ETABLI_DIFFUSION'] = "ESPE ACADEMIE DE NOUVELLE CALE"
+                df.FLAG_MEEF == "1"), 'ETABLI_DIFFUSION'] = "ESPE ACADEMIE DE NOUVELLE CALE"
         df.loc[mask & (df.ETABLI_DIFFUSION == "ESPE ACADEMIE DE NOUVELLE CALE") & (
-                df.FLAG_MEEF < 1), 'ETABLI_DIFFUSION'] = "UNIVERSITE NELLE CALEDONIE"
+                df.FLAG_MEEF == "0"), 'ETABLI_DIFFUSION'] = "UNIVERSITE NELLE CALEDONIE"
     df.loc[(df.ETABLI_DIFFUSION == "ESPE ACADEMIE DE REUNION") & (
             df.TYP_DIPL == "VF"), 'ETABLI_DIFFUSION'] = "UNIVERSITE LA REUNION"
 
@@ -150,14 +145,14 @@ def corrige_COMINS(df, cor_dic):
     VAR = 'COMINS'
     for c in cor_dic['COMINS']:
         if c['TYP_DIPL'] != 'rien':
-            df.loc[(df['TYP_DIPL'] == df['TYP_DIPL']) & (df['COMPOS'] == c['COMPOS']) & (
+            df.loc[(df['TYP_DIPL'] == c['TYP_DIPL']) & (df['COMPOS'] == c['COMPOS']) & (
                     df['RENTREE'] == c['RENTREE']), 'COMINS'] = c['OUT']
         else:
             if c['COMPOS'] != 'rien':
                 if c['RENTREE'] != 'rien':
                     if c['IN'] != 'rien':
                         if c['IN'] == 'crochet':
-                            df.loc[((df[VAR] == '') | (pd.isna(df[VAR])) | (df[VAR] == None)) & (
+                            df.loc[((df[VAR] == '') | (pd.isna(df[VAR])) | (df[VAR] == None) | (df[VAR] == 'None')) & (
                                     df['COMPOS'] == c['COMPOS']) & (df['RENTREE'] == c['RENTREE']), 'COMINS'] = c[
                                 'OUT']
                         else:
@@ -252,7 +247,12 @@ def corr_dep_aca_respa(name, df, cor_dic):
 def corrige_FORMATIONS(df, cor_dic):
     df_corrform = cor_dic['FORMATIONS_CORRECTIF']
 
-    for c in ['NIVEAU', 'SECTDIS', 'DISCIPLI', 'TYP_DIPL']:
+    if 'TYP_DIPINT' in df.columns:
+        cols = ['NIVEAU', 'SECTDIS', 'DISCIPLI', 'TYP_DIPL', 'TYP_DIPINT']
+    else:
+        cols = ['NIVEAU', 'SECTDIS', 'DISCIPLI', 'TYP_DIPL']
+
+    for c in cols:
         mask = (df[c].str.len() == 1) & (df[c].str.isnumeric())
         df.loc[mask, c] = df.loc[mask, c].str.rjust(2, fillchar='0')
 
@@ -283,7 +283,8 @@ def corrige_FORMATIONS(df, cor_dic):
                         df[dict_in['keys_in'][1] + "_temp"] == dict_in['values_in'][1]) & (
                                df[dict_in['keys_in'][2] + "_temp"] == dict_in['values_in'][2]), key[i]] = value[i]
             elif dict_in['len'] > 3:
-                print('ATTENTION faire code pour corrections formation -> plus de 3 variables sous condition', flush=True)
+                print('ATTENTION faire code pour corrections formation -> plus de 3 variables sous condition',
+                      flush=True)
         df = df.loc[:, ~df.columns.str.contains('_temp')]
     return df
 
@@ -296,6 +297,12 @@ def corrige_cursus_lmd(df, cor_dic):
         mask = (df['CURSUS_LMD'].isin(['nan', '', 'X'])) & (df['CURSUS_LMD_OUT'].str.len() > 0)
         df.loc[mask, 'CURSUS_LMD'] = df.loc[mask, 'CURSUS_LMD_OUT']
         df = df.drop('CURSUS_LMD_OUT', axis=1)
+        if "TYP_DIPINT" in df.columns:
+            df_corrlmd = df_corrlmd.rename(columns={'TYP_DIPL': 'TYP_DIPINT'})
+            df = pd.merge(df, df_corrlmd, how='left', left_on='TYP_DIPINT', right_on="TYP_DIPINT")
+            df.loc[df['CURSUS_LMD_OUT'].str.len() > 0, 'CURSUS_LMD_INT'] = df.loc[
+                df['CURSUS_LMD_OUT'].str.len() > 0, 'CURSUS_LMD_OUT']
+            df = df.drop('CURSUS_LMD_OUT', axis=1)
 
     df_corrcursus = pd.DataFrame(cor_dic['CURSUS_LMD_CORRECTIF'])
     if 'CURSUS_LMD' in df.columns:
@@ -304,12 +311,26 @@ def corrige_cursus_lmd(df, cor_dic):
         mask = (df['CURSUS_LMD_OUT'].str.len() > 0)
         df.loc[mask, 'CURSUS_LMD'] = df.loc[mask, 'CURSUS_LMD_OUT']
         df = df.drop('CURSUS_LMD_OUT', axis=1)
+        if "TYP_DIPINT" in df.columns:
+            use = df_corrcursus.loc[(df_corrcursus['NIVEAU'] != '')]
+            use = use.rename(columns={'TYP_DIPL': 'TYP_DIPINT'})
+            df = pd.merge(df, use, how='left', on=['TYP_DIPINT', 'DIPLOM', 'NIVEAU'])
+            mask = (df['CURSUS_LMD_OUT'].str.len() > 0)
+            df.loc[mask, 'CURSUS_LMD_INT'] = df.loc[mask, 'CURSUS_LMD_OUT']
+            df = df.drop('CURSUS_LMD_OUT', axis=1)
 
         use = df_corrcursus.loc[(df_corrcursus['NIVEAU'] == '')].drop(columns={'NIVEAU'})
         df = pd.merge(df, use, how='left', on=['TYP_DIPL', 'DIPLOM'])
         mask = (df['CURSUS_LMD_OUT'].str.len() > 0)
         df.loc[mask, 'CURSUS_LMD'] = df.loc[mask, 'CURSUS_LMD_OUT']
         df = df.drop('CURSUS_LMD_OUT', axis=1)
+        if "TYP_DIPINT" in df.columns:
+            use = use.rename(columns={'TYP_DIPL': 'TYP_DIPINT'})
+            df = pd.merge(df, use, how='left', on=['TYP_DIPINT', 'DIPLOM'])
+            mask = (df['CURSUS_LMD_OUT'].str.len() > 0)
+            df.loc[mask, 'CURSUS_LMD_INT'] = df.loc[mask, 'CURSUS_LMD_OUT']
+            df = df.drop('CURSUS_LMD_OUT', axis=1)
+
     return df
 
 
@@ -317,9 +338,19 @@ def enrich_a_uai(df, cor_dic):
     df_uai = pd.DataFrame(cor_dic['A_UAI'])
 
     if 'ETABLI' in df.columns:
-        df = pd.merge(df, df_uai[df_uai.TYPE == 'inscri'][['RENTREE', 'SOURCE', 'ETABLI', 'ID_PAYSAGE']],
+        df = pd.merge(df, df_uai.loc[df_uai["TYPE"] == "result", ['RENTREE', 'SOURCE', 'ETABLI', 'ID_PAYSAGE']],
                       on=['RENTREE', 'SOURCE', 'ETABLI'],
                       how='left')
+        if len(df.loc[df["ID_PAYSAGE"].isna()]) > 0:
+            df_na = df.loc[df["ID_PAYSAGE"].isna()]
+            df_na = df_na.drop(columns="ID_PAYSAGE")
+            df_na = pd.merge(df_na, df_uai.loc[
+                df_uai["TYPE"] == "inscri", ['RENTREE', 'SOURCE', 'ETABLI', 'ID_PAYSAGE']],
+                             on=['RENTREE', 'SOURCE', 'ETABLI'],
+                             how='left')
+            dfnna = df.loc[df["ID_PAYSAGE"].notna()]
+            df = pd.concat([dfnna, df_na], ignore_index=True)
+
     return df
 
 
@@ -370,10 +401,15 @@ def enrich_proximite(df, cor_dic):
 def enrich_pays(df, cor_dic):
     df_pays = pd.DataFrame(cor_dic['G_PAYS'])
     df_pays['NATION'] = df_pays['PAYS']
+    c999 = list(df.loc[~df["NATION"].isin(df_pays["NATION"]), "NATION"])
+    df.loc[df["NATION"].isin(c999), "NATION"] = "999"
     if 'NATION' in df.columns:
         df = pd.merge(df, df_pays[['NATION', 'CONTINENT', 'UE_28', 'UE_27', 'UE_EURO',
                                    'OCDE_MEMBRES', 'OCDE_OBS', 'BOLOGNE', 'BRICS']],
                       on='NATION', how='left')
+        for col in ['UE_28', 'UE_27', 'UE_EURO', 'OCDE_MEMBRES', 'OCDE_OBS', 'BOLOGNE', 'BRICS']:
+            df[col] = df[col].astype(int)
+
     return df
 
 
@@ -406,6 +442,11 @@ def enrich_lmd(df, cor_dic):
     if 'TYP_DIPL' in df.columns:
         df = pd.merge(df, df_lmd[['TYP_DIPL', 'LMDDONT', 'LMDDONTBIS']],
                       on=['TYP_DIPL'], how='left')
+    if 'TYP_DIPINT' in df.columns:
+        df_lmd = df_lmd.rename(
+            columns={'TYP_DIPL': 'TYP_DIPINT', 'LMDDONT': "LMDDONT_INT", 'LMDDONTBIS': "LMDDONTBIS_INT"})
+        df = pd.merge(df, df_lmd[['TYP_DIPINT', 'LMDDONT_INT', 'LMDDONTBIS_INT']],
+                      on=['TYP_DIPINT'], how='left')
     return df
 
 
@@ -414,6 +455,12 @@ def enrich_dndu(df, cor_dic):
     if 'TYP_DIPL' in df.columns:
         df = pd.merge(df, df_dndu[['TYP_DIPL', 'DNDU']],
                       on=['TYP_DIPL'], how='left')
+    if 'TYP_DIPINT' in df.columns:
+        df_dndu = df_dndu.rename(columns={'TYP_DIPL': 'TYP_DIPINT', "DNDU": "DNDU_INT"})
+        df = pd.merge(df, df_dndu[['TYP_DIPINT', 'DNDU_INT']],
+                      on=['TYP_DIPINT'], how='left')
+        df.loc[df['TYP_DIPINT'] == "", 'DNDU_INT'] = ""
+        df.loc[~df['TYP_DIPINT'].isin(["", "DU"]), "DNDU_INT"] = "DN"
     return df
 
 
@@ -431,41 +478,19 @@ def autres_multi(df):
     return df
 
 
-def effectifs(df):
-    df.loc[(df['INSPR'] == 'O'), 'EFFECTIF'] = 1
-    df.loc[(df['INSPR'] == 'O'), 'EFFS'] = 0
-    df.loc[(df['INSPR'] != 'O'), 'EFFECTIF'] = 0
-    df.loc[(df['INSPR'] != 'O'), 'EFFS'] = 1
-    df.loc[:, 'EFFT'] = 1
+def effectif_resdip(df):
+    df.loc[df['RESDIP'].isin(['O', '1']), 'EFFECTIF_R'] = 1
+    df.loc[df['RESDIP'].isin(['N', 'None']), 'EFFECTIF_R'] = 0
+    df.loc[df["EFFECTIF_R"].isna(), "EFFECTIF_R"] = 0
+    df["EFFECTIF_R"] = df["EFFECTIF_R"].astype(int)
+    return df
 
-    if 'TYP_DIPL' in df.columns:
-        df = df.assign(EFF_DIE=np.where(df.TYP_DIPL == 'PJ', 1, 0))
-        df.loc[df.TYP_DIPL == 'PJ', 'EFFECTIF'] = 0
-        df.loc[df.TYP_DIPL == 'PJ', 'EFFS'] = 0
-        df.loc[df.TYP_DIPL == 'PJ', 'EFFT'] = 0
-        df.loc[df.TYP_DIPL == 'PJ', 'NBACH'] = 0
 
-    if 'AMENA' in df.columns:
-        df = df.assign(EFFECTIF_CESURE=np.where(df.AMENA == '3', df.EFFECTIF, 0))
-        df = df.assign(NBACH_CESURE=np.where(df.AMENA == '3', df.NBACH, 0))
-    else:
-        df['AMENA'] = ''
-
-    df = df.assign(EFF_SS_CPGE=df.EFFECTIF)
-    df = df.assign(NBACH_SS_CPGE=df.NBACH)
-    df = df.assign(EFFT_SS_CPGE=df.EFFT)
-    df = df.assign(EFFS_SS_CPGE=df.EFFS)
-
-    if 'CURPAR' in df.columns:
-        df.loc[(df.CURPAR == '') | (pd.isna(df.CURPAR)) | (df.CURPAR.isnull()), 'CURPAR'] = '99'
-        mask = ((df['CURPAR'] != '02') & (df['CONV'] == 'P')) | (df['CURPAR'] == '02')
-        df.loc[mask, 'EFF_SS_CPGE'] = 0
-        df.loc[mask, 'NBACH_SS_CPGE'] = 0
-        df.loc[mask, 'EFFT_SS_CPGE'] = 0
-        df.loc[mask, 'EFFS_SS_CPGE'] = 0
-    else:
-        df = df.assign(CURPAR='99')
-
+def effectif_resint(df):
+    df.loc[df['RESINT'].isin(['O', '1']), 'EFFECTIF_INT'] = 1
+    df.loc[df['RESINT'].isin(['N', 'None']), 'EFFECTIF_INT'] = 0
+    df.loc[df["EFFECTIF_INT"].isna(), "EFFECTIF_INT"] = 0
+    df["EFFECTIF_INT"] = df["EFFECTIF_INT"].astype(int)
     return df
 
 
@@ -477,9 +502,48 @@ def LMDdont(df):
 
     df.loc[(df['TYP_DIPL'] == 'XA') & (df['PAR_TYPE'] == '0001291'), 'LMDDONTBIS'] = 'LIC_L_LAS'
     df.loc[(df['TYP_DIPL'] == 'XA') & (df['PAR_TYPE'] != '0001291'), 'LMDDONTBIS'] = 'LIC_L_AUT'
+
+    df.loc[(df['TYP_DIPL'] == 'XA') & (df['PAR_TYPE'] != '0001291'), 'LMDDONTBIS'] = 'LIC_L_AUT'
+
+    df.loc[(df['TYP_DIPL'] == '61') & (
+        df['DIPLOM'].isin(['9610007', '9610070', '9610171', '9610062', '9610006'])), 'LMDDONTBIS'] = 'REBOND'
+
+    df.loc[(df['TYP_DIPL'] == '63') & (
+        df['DIPLOM'].isin(['9630001', '9630067', '9630123', '9630127', '9630133', '9630162', '9630163',
+                           '9630166', '9630167', '9630170', '9630190'])), 'LMDDONTBIS'] = 'PAREO'
+
+    df.loc[(df['TYP_DIPL'] == 'XC') & (
+        df['DIPLOM'].isin(['2212622',
+                           '2212634',
+                           '2215257',
+                           '2215267',
+                           '2215490',
+                           '2215491',
+                           '2215493',
+                           '2215496',
+                           '2216535',
+                           '2216536',
+                           '2216986',
+                           '2216988',
+                           '2216989',
+                           '2217038',
+                           '2217039'])), 'LMDDONTBIS'] = 'MAS_AUT'
+
+    if "TYP_DIPINT" in df.columns:
+        df.loc[mask_dipl, 'LMDDONT_INT'] = 'AUTRES'
+        df.loc[mask_dipl, 'LMDDONTBIS_INT'] = 'AUTRES'
+        df.loc[df['DNDU_INT'] == 'DU', 'LMDDONTBIS_INT'] = 'DU'
+
     df.loc[(df['LMDDONT'] == '') | (pd.isna(df['LMDDONT'])) | (df['LMDDONT'].isnull()), 'LMDDONT'] = 'AUTRES'
     df.loc[
         (df['LMDDONTBIS'] == '') | (pd.isna(df['LMDDONTBIS'])) | (df['LMDDONTBIS'].isnull()), 'LMDDONTBIS'] = 'AUTRES'
+
+    if "TYP_DIPINT" in df.columns:
+        df.loc[(df['LMDDONT_INT'] == '') | (pd.isna(df['LMDDONT_INT'])) | (
+            df['LMDDONT_INT'].isnull()), 'LMDDONT_INT'] = 'AUTRES'
+        df.loc[
+            (df['LMDDONTBIS_INT'] == '') | (pd.isna(df['LMDDONTBIS_INT'])) | (
+                df['LMDDONTBIS_INT'].isnull()), 'LMDDONTBIS_INT'] = 'AUTRES'
 
     return df
 
@@ -488,9 +552,6 @@ def niveau_retard_avance(df):
     mask_anbac = ((df['ANBAC'] == '') | (pd.isna(df['ANBAC'])) | (df['ANBAC'].isnull()))
 
     mask_bac_rgp = ((df['BAC_RGRP'] == '') | (pd.isna(df['BAC_RGRP'])) | (df['BAC_RGRP'].isnull()))
-    mask_typ_dipl = (df['TYP_DIPL'].isin(['AC', 'XE', 'CB', 'XA', 'XB', 'XD', 'DR']))
-    df.loc[mask_typ_dipl, 'NIVEAUBIS'] = df.loc[mask_typ_dipl, 'NIVEAU']
-    df.loc[~mask_typ_dipl, 'NIVEAUBIS'] = 'XX'
     df.loc[~mask_anbac, 'AGE_BAC'] = df.loc[~mask_anbac, 'ANBAC'] - df.loc[~mask_anbac, 'ANNAIS']
     df.loc[mask_bac_rgp & (df['BAC'] == '0031'), 'BAC_RGRP'] = '7'
     df.loc[mask_bac_rgp & (df['BAC'] == '0032'), 'BAC_RGRP'] = '7'
@@ -552,7 +613,7 @@ def deptoreg(df, cor_dic):
     return df
 
 
-def corrige2018_2124(df):
+def corrige2018_2024(df):
     mask_bac = df['BAC'].isin(["0031", "0001", "0002"])
     df.loc[mask_bac, 'NATION_BAC'] = "E"
     df.loc[~mask_bac, 'NATION_BAC'] = "F"
@@ -567,6 +628,10 @@ def corrige2018_2124(df):
     df.loc[((df['DNDU'] == '') | (pd.isna(df['DNDU'])) | (df['DNDU'].isnull())), 'DNDU'] = 'DN'
     df.loc[(df['TYP_DIPL'] == 'XA') & (df['CURSUS_LMD'] != 'L'), 'CURSUS_LMD'] = 'L'
     df.loc[(df['TYP_DIPL'] == 'DU') & (df['CURSUS_LMD'] == 'D'), 'CURSUS_LMD'] = 'M'
+
+    if "TYP_DIPINT" in df.columns:
+        df.loc[(df['TYP_DIPINT'] == 'XA') & (df['CURSUS_LMD_INT'] != 'L'), 'CURSUS_LMD_INT'] = 'L'
+        df.loc[(df['TYP_DIPINT'] == 'DU') & (df['CURSUS_LMD_INT'] == 'D'), 'CURSUS_LMD_INT'] = 'M'
     return df
 
 
@@ -581,9 +646,11 @@ def cal_var(df, stage: str):
                   'LCOMETU', 'LCOMREF',
                   'AMENA', 'TYPREPA', 'PCSPAR2', 'COMREF', 'COMETU', 'FR_ETR', 'FR_ETR_R', 'FR_ETR_D', 'ACAETA',
                   'DEPETA',
-                  'COMETA', 'BAC_RGRP', 'TYP_DIPL', 'SECTDIS', 'DISCIPLI', 'NATURE', 'CYCLE', 'NIVEAU_D', 'NIVEAU_F',
+                  'COMETA', 'BAC_RGRP', 'TYP_DIPL', 'TYP_DIPINT', 'SECTDIS', 'DISCIPLI', 'NATURE', 'CYCLE', 'NIVEAU_D',
+                  'NIVEAU_F',
                   'AGE', 'DEPRESPA',
-                  'ACARESPA', 'COMINS', 'DEGETU', 'NBACH', 'NET', 'EFFECTIF', 'GROUPE', 'CURSUS_LMD', 'VOIE', 'NATRG',
+                  'ACARESPA', 'COMINS', 'DEGETU', 'NBACH', 'NET', 'EFFECTIF_R', 'EFFECTIF_INT', 'GROUPE', 'CURSUS_LMD',
+                  'VOIE', 'NATRG',
                   'ACABAC',
                   'COMETAB', 'COMUI', 'DEPBAC', 'DEPINS', 'UUCRINS', 'UUCRETAB', 'PROXIMITE', 'PROXREG', 'PROXBAC',
                   'PROXREGBAC', 'OUTREMER',
@@ -591,7 +658,7 @@ def cal_var(df, stage: str):
                   'ID_PAYSAGE_ED', 'ID_PAYSAGE_IUT',
                   'ID_PAYSAGE_IUT_CAMPUS', 'ID_PAYSAGE_IUT_POLE', 'ID_PAYSAGE_ING', 'ID_PAYSAGE_ING_CAMPUS', 'LMDDONT',
                   'LMDDONTBIS', 'DNDU',
-                  'CORRESPONDANCEIUT', 'SPECIUT', 'OPTIUT', 'PARCOURSBUT', 'EFFS', 'EFFT', 'EFFECTIF_CESURE',
+                  'CORRESPONDANCEIUT', 'SPECIUT', 'OPTIUT', 'PARCOURSBUT',
                   'NBACH_CESURE', 'CONV', 'EFF_DIE',
                   'EFF_SS_CPGE', 'NBACH_SS_CPGE', 'EFFT_SS_CPGE', 'EFFS_SS_CPGE', 'GDDISC', 'NIVEAUBIS', 'AGE_BAC',
                   'RETARD',
@@ -625,9 +692,11 @@ def init_cal_var(df):
                   'LCOMETU', 'LCOMREF',
                   'AMENA', 'TYPREPA', 'PCSPAR2', 'COMREF', 'COMETU', 'FR_ETR', 'FR_ETR_R', 'FR_ETR_D', 'ACAETA',
                   'DEPETA',
-                  'COMETA', 'BAC_RGRP', 'TYP_DIPL', 'SECTDIS', 'DISCIPLI', 'NATURE', 'CYCLE', 'NIVEAU_D', 'NIVEAU_F',
+                  'COMETA', 'BAC_RGRP', 'TYP_DIPL', 'TYP_DIPINT', 'SECTDIS', 'DISCIPLI', 'NATURE', 'CYCLE', 'NIVEAU_D',
+                  'NIVEAU_F',
                   'AGE', 'DEPRESPA',
-                  'ACARESPA', 'COMINS', 'DEGETU', 'NBACH', 'NET', 'EFFECTIF', 'GROUPE', 'CURSUS_LMD', 'VOIE', 'NATRG',
+                  'ACARESPA', 'COMINS', 'DEGETU', 'NBACH', 'NET', 'EFFECTIF_R', "EFFECTIF_INT", 'GROUPE', 'CURSUS_LMD',
+                  'VOIE', 'NATRG',
                   'ACABAC',
                   'COMUI', 'DEPBAC', 'DEPINS', 'UUCRINS', 'UUCRETAB', 'PROXIMITE', 'PROXREG', 'PROXBAC', 'PROXREGBAC',
                   'OUTREMER',
@@ -635,8 +704,7 @@ def init_cal_var(df):
                   'ID_PAYSAGE_ED', 'ID_PAYSAGE_IUT',
                   'ID_PAYSAGE_IUT_CAMPUS', 'ID_PAYSAGE_IUT_POLE', 'ID_PAYSAGE_ING', 'ID_PAYSAGE_ING_CAMPUS', 'LMDDONT',
                   'LMDDONTBIS', 'DNDU',
-                  'CORRESPONDANCEIUT', 'SPECIUT', 'OPTIUT', 'PARCOURSBUT', 'EFFS', 'EFFT', 'EFFECTIF_CESURE',
-                  'NBACH_CESURE', 'CONV',
+                  'CORRESPONDANCEIUT', 'SPECIUT', 'OPTIUT', 'PARCOURSBUT', 'NBACH_CESURE', 'CONV',
                   'EFF_SS_CPGE', 'NBACH_SS_CPGE', 'EFFT_SS_CPGE', 'EFFS_SS_CPGE', 'GDDISC', 'NIVEAUBIS', 'AGE_BAC',
                   'RETARD',
                   'AVANCE', 'REGRESPA', 'REGRESPA16', 'NATION_BAC', 'NATION_VRAI', 'MOBINTERN', 'FLAG_SUP', 'FLAG_EPE']

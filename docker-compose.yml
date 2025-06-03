@@ -1,0 +1,55 @@
+version: "3"
+services:
+  redis:
+    image: redis:5.0.7-alpine
+    networks:
+      - diplomes-network
+
+  dashboard:
+    image: dataesr/dashboard-crawler:1.1
+    ports:
+      - 9181:9181
+    command: rq-dashboard -H redis
+    networks:
+      - diplomes-network
+    depends_on:
+      - redis
+
+  worker:
+    build: .
+    privileged: true
+    command: >
+        /bin/sh -c "python3.8 manage.py run_worker"
+    environment:
+      APP_SETTINGS: application.server.config.DevelopmentConfig
+      MOUNTED_VOLUME_INSCRITS: '/volume_diplomes/'
+    volumes:
+      - /run/media/julia/DATA/diplomes_donnees/:/volume_diplomes
+    networks:
+      - diplomes-network
+    depends_on:
+      - redis
+
+  web:
+    build: .
+    privileged: true
+    ports:
+      - 5004:5000
+    command: python3.8 /src/manage.py run -h 0.0.0.0
+    environment:
+      FLASK_DEBUG: 1
+      APP_SETTINGS: application.server.config.DevelopmentConfig
+      MOUNTED_VOLUME_INSCRITS: '/volume_diplomes/'
+    volumes:
+      - /run/media/julia/DATA/diplomes_donnees/:/volume_diplomes
+    networks:
+      - diplomes-network
+    depends_on:
+      - worker
+
+networks:
+  diplomes-network:
+    driver: bridge
+
+volumes:
+  volume_diplomes:
