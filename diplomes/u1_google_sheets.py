@@ -10,7 +10,7 @@ DATA_PATH = os.getenv("MOUNTED_VOLUME_INSCRITS")
 
 
 def get_all_correctifs_from_google():
-    os.chdir(DATA_PATH)
+    DATA_PATH = os.getenv("MOUNTED_VOLUME_INSCRITS")
     url = f'https://docs.google.com/spreadsheet/ccc?key={os.getenv("KEY_GGSHT")}&output=xls'
     CORRECTIFS_dict = {}
     VARS = ['ETABLI', 'A_UAI', 'C_ETABLISSEMENTS', 'D_EPE', 'E_FORM_ENS', 'DEP_ACA_RESPA_CORRECTIF',
@@ -39,7 +39,7 @@ def get_all_correctifs_from_google():
 
 
 def get_all_correctifs(chx: str) -> dict:
-    os.chdir(DATA_PATH)
+    DATA_PATH = os.getenv("MOUNTED_VOLUME_INSCRITS")
     if chx in ["google", "json"]:
         if chx == "google":
             get_all_correctifs_from_google()
