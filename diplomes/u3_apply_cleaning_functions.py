@@ -373,6 +373,7 @@ def chunkify(df: pd.DataFrame, chunk_size: int):
 def corrige(cor_dict):
     logger.debug(f'start correction')
     cor_dict = get_all_correctifs("google")
+    DATA_PATH = os.getenv("MOUNTED_VOLUME_INSCRITS")
 
     for year in range(2015, 2022):
         logger.debug(f'start correction for {year}')
