@@ -61,4 +61,4 @@ def dwnload():
              'diplomes_donnees/parquet/result18_ssa.parquet', 'diplomes_donnees/parquet/result19_ssa.parquet',
              'diplomes_donnees/parquet/result20_ssa.parquet', 'diplomes_donnees/parquet/result21_ssa.parquet']
     for file in files:
-        swift.download_object("sas", file, file)
+        swift.upload_object_path("sas", file)
