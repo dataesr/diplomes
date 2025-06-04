@@ -1,9 +1,6 @@
-import gzip
 import os
-import pandas as pd
 import swiftclient
 
-from io import BytesIO, TextIOWrapper
 from retry import retry
 
 from application.server.main.logger import get_logger
@@ -26,8 +23,6 @@ init_cmd = f"swift --os-auth-url https://auth.cloud.ovh.net/v3 --auth-version 3 
       --os-region-name GRA"
 conn = None
 
-MOUNTED_VOLUME = '/data'
-
 @retry(delay=2, tries=50)
 def upload_object(container: str, filename: str) -> str:
     object_name = filename.split('/')[-1]
@@ -39,17 +34,25 @@ def upload_object(container: str, filename: str) -> str:
 
 
 @retry(delay=2, tries=50)
+def upload_object_path(container: str, filename: str) -> str:
+    logger.debug(f'Uploading {filename} in {container}')
+    cmd = init_cmd + f' upload {container} {filename} --object-name {filename}' \
+                     f' --segment-size 1048576000 --segment-threads 100'
+    os.system(cmd)
+    return f'https://storage.gra.cloud.ovh.net/v1/AUTH_{project_id}/{container}/{filename}'
+
+
+@retry(delay=2, tries=50)
 def download_object(container: str, filename: str, out: str) -> None:
     logger.debug(f'Downloading {filename} from {container} to {out}')
     cmd = init_cmd + f' download {container} {filename} -o {out}'
     os.system(cmd)
 
+
 @retry(delay=2, tries=50)
-def download_container(container, download_prefix):
-    cmd =  init_cmd + f' download {container} -D {MOUNTED_VOLUME}/{container} --skip-identical'
-    if download_prefix:
-        cmd += f" --prefix {download_prefix}"
-    os.system(cmd)
-    if download_prefix:
-        return f'{MOUNTED_VOLUME}/{container}/{download_prefix}'
-    return f'{MOUNTED_VOLUME}/{container}'
+def delete_object(container: str, folder: str) -> None:
+    connection = get_connection()
+    cont = connection.get_container(container)
+    for n in [e['name'] for e in cont[1] if folder in e['name']]:
+        logger.debug(n)
+        connection.delete_object(container, n)

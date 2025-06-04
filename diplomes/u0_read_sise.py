@@ -7,6 +7,7 @@ import re
 from application.server.main.logger import get_logger
 from diplomes import dtypes_inputs as typesd
 import pyreadstat
+from utils import swift
 
 random.seed(42)
 
@@ -116,6 +117,7 @@ def read_sise_sas():
 
                 logger.debug(f'saving parquet file sise for {name} ...')
                 df.to_parquet(f'{DATA_PATH}parquet/{name}')
+                swift.upload_object_path("sas", f'{DATA_PATH}parquet/{name}')
     logger.debug('done')
 
 
@@ -299,6 +301,7 @@ def to_parquet(df, filename):
     logger.debug(f'saving parquet file sise for {filename} ...')
     os.system(f'mkdir -p {DATA_PATH}parquet')
     df.to_parquet(f'{DATA_PATH}parquet/{filename}.parquet')
+    swift.upload_object_path("sas", f'{DATA_PATH}parquet/{filename}.parquet')
     logger.debug('done')
 
 

@@ -7,6 +7,7 @@ from diplomes.u0_read_sise import *
 from diplomes.u1_google_sheets import get_all_correctifs
 from diplomes.u2_cleaning_functions import *
 from application.server.main.logger import get_logger
+from utils import swift
 
 logger = get_logger(__name__)
 
@@ -424,4 +425,5 @@ def corrige(cor_dict):
             print(f"duration cleaning {source}{year} -> {time.time() - start_main}")
             filename2 = filename.replace(".parquet", "")
             to_parquet(corrected_df, f'corrected_{filename2}')
+            swift.upload_object_path("sas", f'{DATA_PATH}parquet/corrected_{filename2}')
     logger.debug('done')

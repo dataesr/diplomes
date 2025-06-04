@@ -6,6 +6,7 @@ import time
 from application.server.main.logger import get_logger
 from diplomes import dtypes_inputs as typesd
 from diplomes.u1_google_sheets import get_all_correctifs
+from utils import swift
 
 logger = get_logger(__name__)
 
@@ -387,9 +388,11 @@ def generate_od():
         df_od = opendata19(df_sise)
         liste2.append(df_od)
         df_od.to_csv(f"{DATA_PATH}/od/od_diplomes_{year}.csv", index=False, encoding='utf-8', sep=";")
+        swift.upload_object_path("sas", f"{DATA_PATH}/od/od_diplomes_{year}.csv")
         print(f"duration cleaning {year} -> {time.time() - start_main}")
 
     dod = pd.concat(liste2)
     dod.to_csv(f"{DATA_PATH}/od/od_diplomes.csv", index=False, encoding='utf-8', sep=";")
+    swift.upload_object_path("sas", f"{DATA_PATH}/od/od_diplomes.csv")
 
     logger.debug('done')
