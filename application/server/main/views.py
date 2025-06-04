@@ -41,7 +41,7 @@ def run_task_dwnload():
     with Connection(redis.from_url(current_app.config['REDIS_URL'])):
         logger.debug("Connect Redis")
         q = Queue(name='diplomes', default_timeout=default_timeout, result_ttl=default_timeout)
-        task = q.enqueue(create_task_dwnload())
+        task = q.enqueue(create_task_dwnload)
     logger.debug("End task")
     response_object = {'status': 'success', 'data': {'task_id': task.get_id()}}
     return jsonify(response_object), 202
