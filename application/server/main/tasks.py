@@ -30,7 +30,7 @@ def create_task_corrige(args):
                 # si google_sheets modifiées peut-être demander en paramètre si on recharge ou pas excel ?
                 # chargement_google_sheets= args.get('chargement_google_sheets')
                 corrige(cor_dict)
-                generate_od()
+                generate_od(cor_dict)
                 print("Ca marche", flush=True)
                 logger.debug(f'Done!')
         else:

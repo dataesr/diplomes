@@ -37,8 +37,6 @@ dict_i = {'COM_NOM': 'IMPLANTATION_COMMUNE', 'UUCR_ID': 'IMPLANTATION_ID_UUCR', 
           'ACA_ID': 'IMPLANTATION_ID_ACADEMIE', 'ACA_NOM': 'IMPLANTATION_ACADEMIE', 'REG_ID': 'IMPLANTATION_ID_REGION',
           'REG_NOM': 'IMPLANTATION_REGION'}
 dict_d = {'UO_LIB': 'ETABLISSEMENT_ACTUEL_LIB'}
-CORRECTIFS_DICT = get_all_correctifs("google")
-C_ETABLISSEMENT = pd.DataFrame(CORRECTIFS_DICT['C_ETABLISSEMENTS'])
 
 
 def get_sources(annee):
@@ -68,8 +66,9 @@ def read_diplome(source, year):
     return df
 
 
-def sise(df):
+def sise(df, cor_dic):
     df = df.loc[df["EFFECTIF_TOT"] > 0]
+    C_ETABLISSEMENT = pd.DataFrame(cor_dic['C_ETABLISSEMENTS'])
     op150 = C_ETABLISSEMENT[["ID_PAYSAGE", "OPERATEUR_LOLF_150"]]
     df = pd.merge(df, op150, on="ID_PAYSAGE", how="left")
     df = df.loc[df["OPERATEUR_LOLF_150"] == "O"]
@@ -147,10 +146,11 @@ def sise(df):
     return tmp
 
 
-def opendata19(df):
-    E_FORM_ENS = pd.DataFrame(CORRECTIFS_DICT['E_FORM_ENS'])
-    F_RENTREES = pd.DataFrame(CORRECTIFS_DICT['F_RENTREES'])
-    communes = pd.DataFrame(CORRECTIFS_DICT['LES_COMMUNES'])
+def opendata19(df, cor_dic):
+    E_FORM_ENS = pd.DataFrame(cor_dic['E_FORM_ENS'])
+    F_RENTREES = pd.DataFrame(cor_dic['F_RENTREES'])
+    communes = pd.DataFrame(cor_dic['LES_COMMUNES'])
+    C_ETABLISSEMENT = pd.DataFrame(cor_dic['C_ETABLISSEMENTS'])
 
     O = ['RENTREE', 'SESSION', 'ID_PAYSAGE', 'ID_PAYSAGE_FORMENS', 'COM_ETAB', 'COM_INS', 'ETABLI_ORI_UAI',
          'ID_PAYSAGE_EPE_ETAB_COMPOS', 'SEXE', 'AVANCE_RETARD', 'PROXBAC', 'BAC_RGRP', 'PROXREGBAC',
@@ -219,27 +219,27 @@ def opendata19(df):
 
     # import des "formats" SEXE,BAC_RGRP...
 
-    SEXE = pd.DataFrame(CORRECTIFS_DICT['SEXE'])
-    BAC_RGRP = pd.DataFrame(CORRECTIFS_DICT['BAC_RGRP'])
-    AVANCE_RETARD = pd.DataFrame(CORRECTIFS_DICT['AVANCE_RETARD'])[['AVANCE_RETARD', 'BAC_AGE', 'BAC_AGE_LIB']]
-    PROXBAC = pd.DataFrame(CORRECTIFS_DICT['PROXBAC'])
-    PROXREGBAC = pd.DataFrame(CORRECTIFS_DICT['PROXREGBAC'])
-    ATTRAC_INTERN = pd.DataFrame(CORRECTIFS_DICT['ATTRAC_INTERN'])
-    MOBILITE_INTERN = pd.DataFrame(CORRECTIFS_DICT['MOBILITE_INTERN'])
-    DNDU = pd.DataFrame(CORRECTIFS_DICT['DNDU'])[['DNDU', 'DN_DE', 'DN_DE_LIB']]
+    SEXE = pd.DataFrame(cor_dic['SEXE'])
+    BAC_RGRP = pd.DataFrame(cor_dic['BAC_RGRP'])
+    AVANCE_RETARD = pd.DataFrame(cor_dic['AVANCE_RETARD'])[['AVANCE_RETARD', 'BAC_AGE', 'BAC_AGE_LIB']]
+    PROXBAC = pd.DataFrame(cor_dic['PROXBAC'])
+    PROXREGBAC = pd.DataFrame(cor_dic['PROXREGBAC'])
+    ATTRAC_INTERN = pd.DataFrame(cor_dic['ATTRAC_INTERN'])
+    MOBILITE_INTERN = pd.DataFrame(cor_dic['MOBILITE_INTERN'])
+    DNDU = pd.DataFrame(cor_dic['DNDU'])[['DNDU', 'DN_DE', 'DN_DE_LIB']]
     DNDU_INT = DNDU.copy()
     DNDU_INT = DNDU_INT.rename(columns={"DNDU": "DNDU_INT", "DN_DE_LIB": "DN_DE_LIB_INT", "DN_DE": "DN_DE_INT"})
-    CURSUS_LMD = pd.DataFrame(CORRECTIFS_DICT['CURSUS_LMD'])
+    CURSUS_LMD = pd.DataFrame(cor_dic['CURSUS_LMD'])
     CURSUS_LMD_INT = CURSUS_LMD.copy()
     CURSUS_LMD_INT = CURSUS_LMD_INT.rename(
         columns={"CURSUS_LMD": "CURSUS_LMD_INT", "CURSUS_LMD_LIB": "CURSUS_LMD_LIB_INT"})
-    LMDDONTBIS = pd.DataFrame(CORRECTIFS_DICT['LMDDONTBIS'])
+    LMDDONTBIS = pd.DataFrame(cor_dic['LMDDONTBIS'])
     LMDDONTBIS_INT = LMDDONTBIS.copy()
     LMDDONTBIS_INT = LMDDONTBIS_INT.rename(
         columns={"LMDDONTBIS": "LMDDONTBIS_INT", "DIPLOME": "DIPLOME_INT", "DIPLOME_RGP": "DIPLOME_RGP_INT",
                  "DIPLOME_LIB": "DIPLOME_LIB_INT"})
-    NIVEAU = pd.DataFrame(CORRECTIFS_DICT['NIVEAU'])
-    SECTDIS = pd.DataFrame(CORRECTIFS_DICT['SECTDIS'])[
+    NIVEAU = pd.DataFrame(cor_dic['NIVEAU'])
+    SECTDIS = pd.DataFrame(cor_dic['SECTDIS'])[
         ['SECTDIS', 'GD_DISCIPLINE', 'GD_DISCIPLINE_LIB', 'DISCIPLINE', 'DISCIPLINE_LIB', 'SECT_DISCIPLINAIRE',
          'SECT_DISCIPLINAIRE_LIB', 'DISCIPLINES_SELECTION']]
     SECTINT = SECTDIS.copy()
@@ -250,7 +250,7 @@ def opendata19(df):
                  'SECT_DISCIPLINAIRE': "SECT_DISCIPLINAIRE_INT",
                  'SECT_DISCIPLINAIRE_LIB': "SECT_DISCIPLINAIRE_LIB_INT",
                  'DISCIPLINES_SELECTION': "DISCIPLINES_SELECTION_INT"})
-    SPECIUT = pd.DataFrame(CORRECTIFS_DICT['SPECIUT'])[
+    SPECIUT = pd.DataFrame(cor_dic['SPECIUT'])[
         ['SPECIUT', 'SPEC_IUT_RGP_LIB', 'SPEC_IUT', 'SPEC_IUT_LIB', 'IUT_ID_PAYSAGE', 'CORRESPONDANCE_IUT']]
 
     A_temp = pd.merge(temp, SEXE, how='left', on='SEXE')
@@ -366,9 +366,10 @@ def opendata19(df):
     return OD
 
 
-def generate_od():
+def generate_od(cor_dic):
     logger.debug(f'start generation')
     liste2 = []
+    C_ETABLISSEMENT = pd.DataFrame(cor_dic['C_ETABLISSEMENTS'])
     for year in range(2015, 2022):
         liste = []
         logger.debug(f'start correction for {year}')
