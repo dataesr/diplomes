@@ -89,12 +89,12 @@ def read_sise_sas():
                 name = f"enq26bis{sortie}_ssa.parquet"
             else:
                 name = f"dip{sour}{sortie}_ssa.parquet"
-            if name not in os.listdir(f"{DATA_PATH}parquet/"):
+            if name not in os.listdir(f"{DATA_PATH}diplomes_donnees/parquet/"):
                 clef = sour + sortie
 
                 filename = get_filename_sas(sour, sortie)
                 logger.debug(f'reading sas file sise for {sour} {an} ...')
-                df, _ = pyreadstat.read_sas7bdat(f'{DATA_PATH}sas/inputs/{filename}',
+                df, _ = pyreadstat.read_sas7bdat(f'{DATA_PATH}diplomes_donnees/sas/inputs/{filename}',
                                                  encoding='iso-8859-1')
                 col_df = list(df.columns)
                 col_df.sort()
@@ -116,18 +116,18 @@ def read_sise_sas():
                         df[col] = df[col].str.replace(u'\xa0', ' ').str.strip()
 
                 logger.debug(f'saving parquet file sise for {name} ...')
-                df.to_parquet(f'{DATA_PATH}parquet/{name}')
-                swift.upload_object_path("sas", f'{DATA_PATH}parquet/{name}')
+                df.to_parquet(f'{DATA_PATH}diplomes_donnees/parquet/{name}')
+                swift.upload_object_path("sas", f'{DATA_PATH}diplomes_donnees/parquet/{name}')
     logger.debug('done')
 
 
 def read_diplome(source, an):
-    os.chdir(DATA_PATH)
+    os.chdir(DATA_PATH+"diplomes_donnees/")
     read_sise_sas()
     sortie = str(an)[2:4]
     file = get_filename(source, sortie)
-    if file in os.listdir(f'{DATA_PATH}parquet/'):
-        df = pd.read_parquet(f'{DATA_PATH}parquet/{file}')
+    if file in os.listdir(f'{DATA_PATH}diplomes_donnees/parquet/'):
+        df = pd.read_parquet(f'{DATA_PATH}diplomes_donnees/parquet/{file}')
     else:
         print("file not found")
 
@@ -297,21 +297,21 @@ def read_diplome(source, an):
 
 
 def to_parquet(df, filename):
-    os.chdir(DATA_PATH)
+    os.chdir(DATA_PATH+"diplomes_donnees/")
     logger.debug(f'saving parquet file sise for {filename} ...')
-    os.system(f'mkdir -p {DATA_PATH}parquet')
-    df.to_parquet(f'{DATA_PATH}parquet/{filename}.parquet')
+    os.system(f'mkdir -p {DATA_PATH}diplomes_donnees/parquet')
+    df.to_parquet(f'{DATA_PATH}diplomes_donnees/parquet/{filename}.parquet')
     swift.upload_object_path("sas", f'{DATA_PATH}parquet/{filename}.parquet')
     logger.debug('done')
 
 
 def read_rattach(an):
-    os.chdir(DATA_PATH)
+    os.chdir(DATA_PATH+"diplomes_donnees/")
     logger.debug(f'read RATTACH for year {an} ...')
-    fichiers = os.listdir(DATA_PATH + "parquet")
+    fichiers = os.listdir(DATA_PATH + "diplomes_donnees/parquet")
     if f'rattach{str(an)[2:4]}.parquet' not in fichiers:
         df_format, meta_format = pyreadstat.read_sas7bcat(
-            f'{DATA_PATH}FORMAT/inscri{str(an)[2:4]}/formats.sas7bcat',
+            f'{DATA_PATH}diplomes_donnees/FORMAT/inscri{str(an)[2:4]}/formats.sas7bcat',
             encoding='iso-8859-1')
         data_rattach = []
         for compos in meta_format.value_labels['$RATTACH']:
@@ -320,19 +320,19 @@ def read_rattach(an):
         df_rattach = pd.DataFrame(data_rattach)
         to_parquet(df_rattach, f'rattach{str(an)[2:4]}')
     else:
-        df_rattach = pd.read_parquet(f'{DATA_PATH}parquet/rattach{str(an)[2:4]}.parquet')
+        df_rattach = pd.read_parquet(f'{DATA_PATH}diplomes_donnees/parquet/rattach{str(an)[2:4]}.parquet')
     logger.debug('done')
 
     return df_rattach
 
 
 def read_cometab(rentree):
-    os.chdir(DATA_PATH)
+    os.chdir(DATA_PATH+"diplomes_donnees/")
     logger.debug(f'read COMETAB for year {rentree} ...')
-    fichiers = os.listdir(DATA_PATH + "parquet")
+    fichiers = os.listdir(DATA_PATH + "diplomes_donnees/parquet")
     if f'cometab{str(rentree)[2:4]}.parquet' not in fichiers:
         df_format, meta_format = pyreadstat.read_sas7bcat(
-            f'{DATA_PATH}FORMAT/inscri{str(rentree)[2:4]}/formats.sas7bcat',
+            f'{DATA_PATH}diplomes_donnees/FORMAT/inscri{str(rentree)[2:4]}/formats.sas7bcat',
             encoding='iso-8859-1')
 
         data_COMCOMP = []
@@ -342,6 +342,6 @@ def read_cometab(rentree):
         df_cometab = pd.DataFrame(data_COMCOMP)
         to_parquet(df_cometab, f'cometab{str(rentree)[2:4]}')
     else:
-        df_cometab = pd.read_parquet(f'{DATA_PATH}parquet/cometab{str(rentree)[2:4]}.parquet')
+        df_cometab = pd.read_parquet(f'{DATA_PATH}diplomes_donnees/parquet/cometab{str(rentree)[2:4]}.parquet')
     logger.debug('done')
     return df_cometab

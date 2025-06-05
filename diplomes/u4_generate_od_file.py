@@ -51,7 +51,7 @@ def get_sources(annee):
 
 
 def read_diplome(source, year):
-    os.chdir(DATA_PATH)
+    os.chdir(DATA_PATH+"diplomes_donnees/")
     # an = str(year)[2:4]
     logger.debug(f'reading parquet file diplomes for {source} {year} ...')
     if source == "result":
@@ -61,7 +61,7 @@ def read_diplome(source, year):
     else:
         filename = f'corrected_dip{source}{year}_ssa.parquet'
 
-    df = pd.read_parquet(f'{DATA_PATH}parquet/{filename}')
+    df = pd.read_parquet(f'{DATA_PATH}diplomes_donnees/parquet/{filename}')
 
     return df
 
@@ -385,15 +385,15 @@ def generate_od(cor_dic):
             df = df.drop(columns="OPERATEUR_LOLF_150")
             liste.append(df)
         liste_df = pd.concat(liste)
-        df_sise = sise(liste_df)
-        df_od = opendata19(df_sise)
+        df_sise = sise(liste_df, cor_dic)
+        df_od = opendata19(df_sise, cor_dic)
         liste2.append(df_od)
-        df_od.to_csv(f"{DATA_PATH}/od/od_diplomes_{year}.csv", index=False, encoding='utf-8', sep=";")
-        swift.upload_object_path("sas", f"{DATA_PATH}/od/od_diplomes_{year}.csv")
+        df_od.to_csv(f"{DATA_PATH}diplomes_donnees/od/od_diplomes_{year}.csv", index=False, encoding='utf-8', sep=";")
+        swift.upload_object_path("sas", f"{DATA_PATH}diplomes_donnees/od/od_diplomes_{year}.csv")
         print(f"duration cleaning {year} -> {time.time() - start_main}")
 
     dod = pd.concat(liste2)
-    dod.to_csv(f"{DATA_PATH}/od/od_diplomes.csv", index=False, encoding='utf-8', sep=";")
-    swift.upload_object_path("sas", f"{DATA_PATH}/od/od_diplomes.csv")
+    dod.to_csv(f"{DATA_PATH}diplomes_donnees/od/od_diplomes.csv", index=False, encoding='utf-8', sep=";")
+    swift.upload_object_path("sas", f"{DATA_PATH}diplomes_donnees/od/od_diplomes.csv")
 
     logger.debug('done')
