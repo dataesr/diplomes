@@ -425,5 +425,5 @@ def corrige(cor_dict):
             print(f"duration cleaning {source}{year} -> {time.time() - start_main}")
             filename2 = filename.replace(".parquet", "")
             to_parquet(corrected_df, f'corrected_{filename2}')
-            swift.upload_object_path("sas", f'{DATA_PATH}diplomes_donnees/parquet/corrected_{filename2}')
+            swift.upload_object_path("sas", f'{DATA_PATH}parquet/corrected_{filename2}')
     logger.debug('done')

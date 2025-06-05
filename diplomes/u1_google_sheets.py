@@ -33,7 +33,7 @@ def get_all_correctifs_from_google():
                     c[f] = str(c[f]).split('.0')[0].strip()
 
         CORRECTIFS_dict[f'{VAR}'] = correctifs
-    json.dump(CORRECTIFS_dict, open(f'{DATA_PATH}diplomes_donnees/correctifs.json', 'w'))
+    json.dump(CORRECTIFS_dict, open(f'{DATA_PATH}correctifs.json', 'w'))
 
 
 def get_all_correctifs(chx: str) -> dict:
@@ -42,12 +42,12 @@ def get_all_correctifs(chx: str) -> dict:
         if chx == "google":
             get_all_correctifs_from_google()
         elif chx == "json":
-            if "correctifs.json" in os.listdir(DATA_PATH+"diplomes_donnees/"):
+            if "correctifs.json" in os.listdir(DATA_PATH):
                 pass
             else:
                 raise ValueError(
                     "le fichier correctifs.json n\'existe pas encore ; il faut lancer le chargement google")
-        with open(f'{DATA_PATH}diplomes_donnees/correctifs.json', "r") as f:
+        with open(f'{DATA_PATH}correctifs.json', "r") as f:
             file = json.load(f)
         correctifs = file.copy()
 
