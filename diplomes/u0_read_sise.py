@@ -117,7 +117,7 @@ def read_sise_sas():
 
                 logger.debug(f'saving parquet file sise for {name} ...')
                 df.to_parquet(f'{DATA_PATH}parquet/{name}')
-                swift.upload_object_path("sas", f'{DATA_PATH}parquet/{name}')
+                swift.upload_object_path("sas", f'{DATA_PATH}parquet/{name}.parquet')
     logger.debug('done')
 
 
@@ -253,7 +253,7 @@ def read_diplome(source, an):
         df.loc[(df["RESDIP"] == "O") & (df["TYP_DIPINT"] == "10"), "TYP_DIPINT"] = "CP"
         df.loc[(df["RESDIP"] == "O") & (df["TYP_DIPINT"] == "20"), "TYP_DIPINT"] = "EP"
         df.loc[(df["RESDIP"] == "O") & (df["TYP_DIPINT"].isin([np.nan, "", None, "None"])) & (
-                    df["TYP_DIPL"] == "PE"), "TYP_DIPINT"] = "CZ"
+                df["TYP_DIPL"] == "PE"), "TYP_DIPINT"] = "CZ"
         df.loc[(df["RESINT"] == "O") & (df["TYP_DIPR"] == "XA") & (df["TYP_DIPINT"].isin(["01", "10", "CC", "XA"])) & (
                 df["NIVEAUR"] == "02"), "TYP_DIPINT"] = "CP"
 
@@ -281,7 +281,7 @@ def read_diplome(source, an):
         df.loc[(df["RESINT"] == "O") & (df["TYP_DIPR"] == "XA") & (df["TYP_DIPINT"].isin(["01", "10", "CC", "XA"])) & (
                 df["NIVEAUR"] == "02"), "TYP_DIPINT"] = "CP"
         df.loc[(df["RESDIP"] == "N") & (df["RESINT"] == "O") & (df["DIPINT"] != "") & (
-                    df["TYP_DIPINT"] == "10"), "TYP_DIPINT"] = "CP"
+                df["TYP_DIPINT"] == "10"), "TYP_DIPINT"] = "CP"
         df.loc[(df["RESDIP"] == "N") & (df["RESINT"] == "O") & (df["DIPINT"] != "") & (
                 df["TYP_DIPINT"] == "20"), "TYP_DIPINT"] = "EP"
         df.loc[(df["RESDIP"] == "N") & (df["RESINT"] == "O") & (df["TYP_DIPINT"].isin([np.nan, "", None, "None"])) & (
@@ -289,6 +289,9 @@ def read_diplome(source, an):
         df.loc[(df["RESDIP"] == "N") & (df["RESINT"] == "O") & (df["TYP_DIPINT"].isin([np.nan, "", None, "None"])) & (
                 df["TYP_DIPINT"] == "5000770") & (df["TYP_DIPR"] == "PE"), "TYP_DIPINT"] = "CZ"
         df.loc[(df["TYP_DIPINT"] == "CC") & (df["TYP_DIPR"] == "XA") & (df["RESINT"] == "O"), "TYP_DIPINT"] = "CP"
+        df.loc[(df["RESDIP"] == "O") & (df["RESINT"] == "O") & (
+            ~df["TYP_DIPINT"].isin([np.nan, "", None, "None"])) & (
+                   ~df["DIPINT"].isin([np.nan, "", None, "None"])), "RESDIP"] = "N"
 
     if source in ["result", "priv"]:
         df = df.loc[(df["RESDIP"] == "O") | (df["RESINT"] == "O")]
