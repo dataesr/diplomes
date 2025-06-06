@@ -327,9 +327,10 @@ def corrige_df(df, source, rentree, cor_dict):
         df.loc[(df["RESDIP"] == "O") & (df["DIPLOM"] == "6000361") & (df["TYP_DIPL"] == "99"), "SECTDIS"] = "16"
         df.loc[(df["RESDIP"] == "O") & (df["DIPLOM"] == "6000361") & (df["TYP_DIPL"] == "99"), "DISCIPLI"] = "15"
         df.loc[(df["RESDIP"] == "O") & (df["DIPLOM"] == "6000361") & (df["TYP_DIPL"] == "99"), "TYP_DIPL"] = "FI"
-        if "RESINT" in df.columns:
+        if "RESINT" in df.columns and rentree==2020:
             df.loc[
-                (df["RESDIP"] == "O") & (df["RESINT"] == "N") & (df["DIPINT"].isin(["", "None", None, np.nan])) & (
+                (df["RESDIP"] == "O") & (df["RESINT"] == "N") & (df["DIPLOM"].isin(["2500203", "2500164"])) & (
+                    df["DIPINT"].isin(["", "None", None, np.nan])) & (
                     df["TYP_DIPINT"].isin(["", "None", None, np.nan])) & (
                     ~df["LMDDONT_INT"].isin(["", "None", None, np.nan])), "suppression"] = "suppression"
             df = df.loc[df["suppression"].isna()].drop(columns="suppression")
