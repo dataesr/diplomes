@@ -327,6 +327,12 @@ def corrige_df(df, source, rentree, cor_dict):
         df.loc[(df["RESDIP"] == "O") & (df["DIPLOM"] == "6000361") & (df["TYP_DIPL"] == "99"), "SECTDIS"] = "16"
         df.loc[(df["RESDIP"] == "O") & (df["DIPLOM"] == "6000361") & (df["TYP_DIPL"] == "99"), "DISCIPLI"] = "15"
         df.loc[(df["RESDIP"] == "O") & (df["DIPLOM"] == "6000361") & (df["TYP_DIPL"] == "99"), "TYP_DIPL"] = "FI"
+        if "RESINT" in df.columns:
+            df.loc[
+                (df["RESDIP"] == "O") & (df["RESINT"] == "N") & (df["DIPINT"].isin(["", "None", None, np.nan])) & (
+                    df["TYP_DIPINT"].isin(["", "None", None, np.nan])) & (
+                    ~df["LMDDONT_INT"].isin(["", "None", None, np.nan])), "suppression"] = "suppression"
+            df = df.loc[df["suppression"].isna()].drop(columns="suppression")
 
     if source == "result":
         df.loc[(df["RESDIP"] == "O") & (df["RESINT"] == "X") & (df["DIPINT"] == "8"), "TYP_DIPINT"] = ""
