@@ -338,7 +338,7 @@ def corrige_cursus_lmd(df, cor_dic):
 
 def enrich_a_uai(df, cor_dic):
     df_uai = pd.DataFrame(cor_dic['A_UAI'])
-    a_uai = a_uai.loc[a_uai["TYPE"] == "result"]
+    a_uai = df_uai.loc[df_uai["TYPE"] == "result"]
     a_uai2 = a_uai.copy()
     a_uai = a_uai.drop(columns="ID_PAYSAGE").drop_duplicates().reset_index(drop=True)
     a_uai3 = pd.merge(a_uai, a_uai2, on=["RENTREE", "ANNEE", "TYPE", "SOURCE", "ETABLI"], how="outer")
