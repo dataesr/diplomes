@@ -1,3 +1,5 @@
+import sys
+
 import numpy as np
 import pandas as pd
 
@@ -336,22 +338,30 @@ def corrige_cursus_lmd(df, cor_dic):
 
 def enrich_a_uai(df, cor_dic):
     df_uai = pd.DataFrame(cor_dic['A_UAI'])
+    a_uai = a_uai.loc[a_uai["TYPE"] == "result"]
+    a_uai2 = a_uai.copy()
+    a_uai = a_uai.drop(columns="ID_PAYSAGE").drop_duplicates().reset_index(drop=True)
+    a_uai3 = pd.merge(a_uai, a_uai2, on=["RENTREE", "ANNEE", "TYPE", "SOURCE", "ETABLI"], how="outer")
+    if len(a_uai3) == len(a_uai2) == len(a_uai):
+        if 'ETABLI' in df.columns:
+            df = pd.merge(df, df_uai.loc[df_uai["TYPE"] == "result", ['RENTREE', 'SOURCE', 'ETABLI', 'ID_PAYSAGE']],
+                          on=['RENTREE', 'SOURCE', 'ETABLI'],
+                          how='left')
+            if len(df.loc[df["ID_PAYSAGE"].isna()]) > 0:
+                df_na = df.loc[df["ID_PAYSAGE"].isna()]
+                df_na = df_na.drop(columns="ID_PAYSAGE")
+                df_na = pd.merge(df_na, df_uai.loc[
+                    df_uai["TYPE"] == "inscri", ['RENTREE', 'SOURCE', 'ETABLI', 'ID_PAYSAGE']],
+                                 on=['RENTREE', 'SOURCE', 'ETABLI'],
+                                 how='left')
+                dfnna = df.loc[df["ID_PAYSAGE"].notna()]
+                df = pd.concat([dfnna, df_na], ignore_index=True)
+                return df
+    else:
+        logger.debug("Doublons dans A_UAI")
+        sys.exit(1)
 
-    if 'ETABLI' in df.columns:
-        df = pd.merge(df, df_uai.loc[df_uai["TYPE"] == "result", ['RENTREE', 'SOURCE', 'ETABLI', 'ID_PAYSAGE']],
-                      on=['RENTREE', 'SOURCE', 'ETABLI'],
-                      how='left')
-        if len(df.loc[df["ID_PAYSAGE"].isna()]) > 0:
-            df_na = df.loc[df["ID_PAYSAGE"].isna()]
-            df_na = df_na.drop(columns="ID_PAYSAGE")
-            df_na = pd.merge(df_na, df_uai.loc[
-                df_uai["TYPE"] == "inscri", ['RENTREE', 'SOURCE', 'ETABLI', 'ID_PAYSAGE']],
-                             on=['RENTREE', 'SOURCE', 'ETABLI'],
-                             how='left')
-            dfnna = df.loc[df["ID_PAYSAGE"].notna()]
-            df = pd.concat([dfnna, df_na], ignore_index=True)
 
-    return df
 
 
 def enrich_d_epe(df, cor_dic):
