@@ -98,7 +98,16 @@ def corrige_df(df, source, rentree, cor_dict):
     df = corrige_ETABLI(df, cor_dict)
 
     print("enrich_a_uai", flush=True)
-    df = enrich_a_uai(df, cor_dict)
+    a_uai = pd.DataFrame(cor_dict["A_UAI"])
+    a_uai = a_uai.loc[a_uai["TYPE"] == "result"]
+    a_uai2 = a_uai.copy()
+    a_uai = a_uai.drop(columns="ID_PAYSAGE").drop_duplicates().reset_index(drop=True)
+    a_uai3 = pd.merge(a_uai, a_uai2, on=["RENTREE", "ANNEE", "TYPE", "SOURCE", "ETABLI"], how="outer")
+    if len(a_uai) != len(a_uai2) == len(a_uai3):
+        logger.debug("Duplicated values in A_UAI")
+        raise ValueError
+    else:
+        df = enrich_a_uai(df, cor_dict)
 
     print("enrich_d_epe", flush=True)
     df = enrich_d_epe(df, cor_dict)
