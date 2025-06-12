@@ -383,6 +383,7 @@ def generate_od(cor_dic):
             df = pd.merge(df, op150, on="ID_PAYSAGE", how="left")
             df = df.loc[df["OPERATEUR_LOLF_150"] == "O"]
             df = df.drop(columns="OPERATEUR_LOLF_150")
+            df = df.loc[df["ID_PAYSAGE"]!="XR16q"]
             liste.append(df)
         liste_df = pd.concat(liste)
         df_sise = sise(liste_df, cor_dic)
