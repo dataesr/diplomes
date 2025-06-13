@@ -164,11 +164,12 @@ def read_diplome(source, an):
 
     if source == "inge":
         df["FLAG_MEEF"] = "0"
-        if "RESINT" in df.columns:
-            df.loc[df["RESINT"] != "O", "RESDIP"] = "O"
-            df.loc[df["RESINT"] != "O", "RESINT"] = "N"
-        else:
-            df.loc[df["RESDIP"] != "N", "RESDIP"] = "O"
+        df.loc[df["RESDIP"] != "N", "RESDIP"] = "O"
+        # if "RESINT" in df.columns:
+        #     df.loc[df["RESINT"] != "O", "RESDIP"] = "O"
+        #     df.loc[df["RESINT"] != "O", "RESINT"] = "N"
+        # else:
+        #     df.loc[df["RESDIP"] != "N", "RESDIP"] = "O"
     if source == "ens":
         df["FLAG_MEEF"] = "0"
         df.loc[~df["DIPINT"].isin([np.nan, "", None, "None"]), "RESINT"] = "O"
