@@ -356,7 +356,7 @@ def opendata19(df, cor_dic):
                  "OBTENU_DIPLOME": "obtenu_diplome", "RENTREE": "rentree",
                  "SECT_DISCIPLINAIRE": "SECT_DISCIPLINAIRE_r", "SECT_DISCIPLINAIRE_INT": "SECT_DISCIPL_int",
                  "SECT_DISCIPLINAIRE_LIB": "Secteur disciplinaire du diplôme",
-                 "SECT_DISCIPLINAIRE_LIB_INT": "Secteur disicplinaire du diplôme intermédiaire", "SESSION": "Session",
+                 "SECT_DISCIPLINAIRE_LIB_INT": "Secteur disciplinaire du diplôme intermédiaire", "SESSION": "Session",
                  "SEXE": "sexe", "SEXE_LIB": "Sexe de l'étudiant", "SPEC_IUT": "SPEC_DUTr",
                  "SPEC_IUT_LIB": "Spécialité du DUT délivré",
                  "SPEC_IUT_RGP_LIB": "Regroupement de spécialité DUTs du DUT"}
