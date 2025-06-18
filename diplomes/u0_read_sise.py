@@ -164,7 +164,7 @@ def read_diplome(source, an):
 
     if source == "inge":
         df["FLAG_MEEF"] = "0"
-        if an>=2020:
+        if an==2020:
             df.loc[df["RESDIP"] != "N", "RESDIP"] = "O"
         else:
             if "RESINT" in df.columns:
