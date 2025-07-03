@@ -363,6 +363,19 @@ def opendata19(df, cor_dic):
 
     OD = OD.rename(columns=col_names)
 
+    OD2 = OD[["etablissement_id_paysage", "etablissement_compos_id_paysage", "DIPLOME_r", "DIPlome_int",
+           "Année universitaire", "Nombre de diplômes délivrés",
+           "Nombre de diplômes intermédiaires délivrés"]].copy()
+
+    OD2["etablissement_compos_id_paysage"] = OD2["etablissement_compos_id_paysage"].fillna("")
+    OD2["DIPlome_int"] = OD2["DIPlome_int"].fillna("")
+    verification = OD2.groupby(
+        ["etablissement_id_paysage", "etablissement_compos_id_paysage", "DIPLOME_r", "DIPlome_int",
+         "Année universitaire"]).sum().reset_index()
+
+    verification.to_csv("verification_diplomes.csv", sep=";", index=False, encoding="utf-8")
+    swift.upload_object_path("sas", f"{DATA_PATH}od/verification_diplomes.csv")
+
     return OD
 
 
