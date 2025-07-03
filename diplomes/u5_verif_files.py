@@ -124,8 +124,8 @@ def verif(cor_dict: dict):
                     cell.fill = green_fill
 
     # Sauvegarder le fichier Excel
-    excel_file_path = 'evolutions_importantes_sans_diplomr.xlsx'
+    excel_file_path = f"{DATA_PATH}od/evolutions_importantes_sans_diplomr.xlsx"
     wb.save(excel_file_path)
-    swift.upload_object_path("sas", f"{DATA_PATH}od/{excel_file_path}")
+    swift.upload_object_path("sas", excel_file_path)
 
     logger.debug(f"Les résultats ont été exportés vers {excel_file_path}")
