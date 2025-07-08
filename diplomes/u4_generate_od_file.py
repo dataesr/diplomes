@@ -233,6 +233,7 @@ def opendata19(df, cor_dic):
     CURSUS_LMD_INT = CURSUS_LMD.copy()
     CURSUS_LMD_INT = CURSUS_LMD_INT.rename(
         columns={"CURSUS_LMD": "CURSUS_LMD_INT", "CURSUS_LMD_LIB": "CURSUS_LMD_LIB_INT"})
+    CURSUS_LMD = CURSUS_LMD.rename(columns={"CURSUS_LMD": "CURSUS_LMDR"})
     LMDDONTBIS = pd.DataFrame(cor_dic['LMDDONTBIS'])
     LMDDONTBIS_INT = LMDDONTBIS.copy()
     LMDDONTBIS_INT = LMDDONTBIS_INT.rename(
@@ -266,7 +267,7 @@ def opendata19(df, cor_dic):
         H_int_temp = pd.merge(H_temp, DNDU_INT, how='left', on='DNDU_INT')
     else:
         H_int_temp = H_temp.copy()
-    I_temp = pd.merge(H_int_temp, CURSUS_LMD, how='left', on='CURSUS_LMD')
+    I_temp = pd.merge(H_int_temp, CURSUS_LMD, how='left', on='CURSUS_LMDR')
     I_int_temp = pd.merge(I_temp, CURSUS_LMD_INT, how='left', on='CURSUS_LMD_INT')
     J_temp = pd.merge(I_int_temp, LMDDONTBIS, how='left', on='LMDDONTBIS')
     J_int_temp = pd.merge(J_temp, LMDDONTBIS_INT, how='left', on='LMDDONTBIS_INT')
@@ -276,7 +277,7 @@ def opendata19(df, cor_dic):
     M_temp = pd.merge(L_int_temp, SPECIUT, how='left', on='SPECIUT')
 
     OD = M_temp.groupby(['ANNEE_UNIVERSITAIRE', 'ATTRAC_INTERN', 'ATTRAC_INTERN_LIB', 'BAC',
-                         'BAC_AGE_LIB', 'BAC_LIB', 'BAC_RGP', 'CURSUS_LMD', 'CURSUS_LMD_LIB', "CURSUS_LMD_INT",
+                         'BAC_AGE_LIB', 'BAC_LIB', 'BAC_RGP', 'CURSUS_LMDR', 'CURSUS_LMD_LIB', "CURSUS_LMD_INT",
                          "CURSUS_LMD_LIB_INT", 'DIPLOME', 'DIPLOME_INT',
                          'DIPLOME_LIB', 'DIPLOME_LIB_INT', 'DIPLOME_RGP', 'DISCIPLINE', 'DISCIPLINES_SELECTION',
                          'DISCIPLINE_LIB', 'DISCIPLINE_INT', 'DISCIPLINE_LIB_INT', 'DN_DE', 'DN_DE_LIB',
@@ -307,7 +308,7 @@ def opendata19(df, cor_dic):
                  "ATTRAC_INTERN_UE_27": "Nombre de diplômes délivrés UE27", "BAC": "bac",
                  "BAC_AGE_LIB": "Age au baccalauréat", "BAC_LIB": "Série du baccalauréat obtenu",
                  "BAC_RGP": "Type du baccalauréat obtenu",
-                 "CURSUS_LMD": "CURSUS_LMD_R", "CURSUS_LMD_LIB": "Cycle universitaire (cursus LMD)",
+                 "CURSUS_LMDR": "CURSUS_LMD_R", "CURSUS_LMD_LIB": "Cycle universitaire (cursus LMD)",
                  "CURSUS_LMD_INT": "Cycle universitaire intermédiaire", "CURSUS_LMD_LIB_INT": "cursus_lmd_int",
                  "DIPLOME": "DIPLOME_r", "DIPLOME_INT": "DIPlome_int", "DIPLOME_LIB": "Diplôme délivré",
                  "DIPLOME_LIB_INT": "Diplôme intermédiaire délivré", "DIPLOME_RGP": "Regroupement de diplômes",
