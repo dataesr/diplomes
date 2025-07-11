@@ -8,6 +8,10 @@ logger = get_logger(__name__)
 
 
 def get_all_correctifs_from_google():
+    """
+    Création du fichier JSON avec les corrections issues du Google Sheet
+    :return:
+    """
     DATA_PATH = os.getenv("MOUNTED_VOLUME_INSCRITS")
     url = f'https://docs.google.com/spreadsheet/ccc?key={os.getenv("KEY_GGSHT")}&output=xls'
     CORRECTIFS_dict = {}
@@ -37,6 +41,12 @@ def get_all_correctifs_from_google():
 
 
 def get_all_correctifs(chx: str) -> dict:
+    """
+    Création du dictionnaire avec les corrections issues du Google Sheet soit en lisant le fichier existant (json),
+    soit en téléchargeant le fichier depuis le Google Sheet (google)
+    :param chx: json ou google
+    :return: dictionnaire avec les corrections issues du Google Sheet
+    """
     DATA_PATH = os.getenv("MOUNTED_VOLUME_INSCRITS")
     if chx in ["google", "json"]:
         if chx == "google":

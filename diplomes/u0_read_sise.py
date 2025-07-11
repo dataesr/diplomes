@@ -17,6 +17,10 @@ DATA_PATH = os.getenv("MOUNTED_VOLUME_INSCRITS")
 
 
 def get_sources(annee):
+    """
+    :param annee: integer supérieur à 2015
+    :return: la liste des sources pour l'année indiquée
+    """
     assert (annee >= 2015)
     sources = ['result', 'ens', 'inge', 'priv']
     if annee > 2017:
@@ -27,28 +31,12 @@ def get_sources(annee):
     return sources
 
 
-def list_id(lng: int, nb: int) -> list:
-    """
-    Don't keep E/e and zero as first character.
-    Generate codes of a certain size defined by the user.
-
-    """
-    letters = string.hexdigits
-    letters = letters.replace("e", "")
-    letters = letters.replace("E", "")
-    lng_let = len(letters)
-    liste = []
-    for n in range(nb * 2):
-        res = "".join(random.choice(letters) for i in range(lng))
-        liste.append(res)
-
-    liste = list(set(liste))
-    liste = [x for x in liste if not re.search(r"^0.+", x)][0:nb]
-
-    return liste
-
-
 def get_filename(source, an):
+    """
+    :param source: nom de la source des données (result, enq , inge,...)
+    :param an: année
+    :return: le nom du fichier au format parquet à télécharger
+    """
     if source == "result":
         filename = f'{source}{an}_ssa.parquet'
     elif source == "enq":
@@ -59,6 +47,11 @@ def get_filename(source, an):
 
 
 def get_filename_sas(source, an):
+    """
+    :param source: nom de la source des données (result, enq , inge,...)
+    :param an: année
+    :return: le nom du fichier au format SAS
+    """
     if int(an) >= 15:
         if source == "result":
             filename = f'{source}{an}_ssa.sas7bdat'
@@ -70,6 +63,11 @@ def get_filename_sas(source, an):
 
 
 def annee(df: pd.DataFrame):
+    """
+    :param df:
+    :return: Transforme les colonnes ou les années doivent être en chiffres et
+    ne sont pas toutes remplies en Int64 de Pandas
+    """
     col_an = ["ANBAC", "ANNAIS", "ANINSC"]
     for col in col_an:
         if col in df.columns:
@@ -79,6 +77,9 @@ def annee(df: pd.DataFrame):
 
 
 def read_sise_sas():
+    """
+    :return: Transforme le fichier SAS en fichier parquet
+    """
     for an in range(2015, 2021):
         sources = get_sources(an)
         sortie = str(an)[2:4]
@@ -122,6 +123,12 @@ def read_sise_sas():
 
 
 def read_diplome(source, an):
+    """
+    Lecture et 1ers traiements du jeu de données
+    :param source: nom de la source des données (result, enq , inge,...)
+    :param an: année
+    :return: fichier où va s'appliquer les traitements de u2 et u3
+    """
     os.chdir(DATA_PATH)
     read_sise_sas()
     sortie = str(an)[2:4]
@@ -164,7 +171,7 @@ def read_diplome(source, an):
 
     if source == "inge":
         df["FLAG_MEEF"] = "0"
-        if an==2020:
+        if an == 2020:
             df.loc[df["RESDIP"] != "N", "RESDIP"] = "O"
         else:
             if "RESINT" in df.columns:
@@ -304,6 +311,12 @@ def read_diplome(source, an):
 
 
 def to_parquet(df, filename):
+    """
+    Enregistre un dataframe dans un dossier au format parquet
+    :param df:
+    :param filename:
+    :return:
+    """
     os.chdir(DATA_PATH)
     logger.debug(f'saving parquet file sise for {filename} ...')
     os.system(f'mkdir -p {DATA_PATH}parquet')
@@ -313,6 +326,12 @@ def to_parquet(df, filename):
 
 
 def read_rattach(an):
+    """
+    Prend le fichier rattach au format SAS, le transforme en dataframe et
+    l'enregistre au format parquet dans un dossier par année s'il n'existe pas encore
+    :param an: année
+    :return: dataframe rattach
+    """
     os.chdir(DATA_PATH)
     logger.debug(f'read RATTACH for year {an} ...')
     fichiers = os.listdir(DATA_PATH + "parquet")
@@ -334,6 +353,12 @@ def read_rattach(an):
 
 
 def read_cometab(rentree):
+    """
+    Prend le fichier rattach au format SAS, le transforme en dataframe et
+    l'enregistre au format parquet dans un dossier par année s'il n'existe pas encore
+    :param rentree: année
+    :return: dataframe cometab
+    """
     os.chdir(DATA_PATH)
     logger.debug(f'read COMETAB for year {rentree} ...')
     fichiers = os.listdir(DATA_PATH + "parquet")

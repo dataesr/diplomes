@@ -15,6 +15,14 @@ pd.options.mode.chained_assignment = None
 
 
 def corrige_df(df, source, rentree, cor_dict):
+    """
+    Application des fonctions de correction des jeux de données
+    :param df:
+    :param source: nom de la source des données (result, enq , inge,...)
+    :param rentree: année
+    :param cor_dict: dictionnaire des corrections
+    :return: fichier corrigé
+    """
     start_main = time.time()
 
     df["AGE_BAC"] = df["ANBAC"] - df["ANNAIS"]
@@ -368,6 +376,12 @@ def corrige_df(df, source, rentree, cor_dict):
 
 
 def chunkify(df: pd.DataFrame, chunk_size: int):
+    """
+    Séparation d'un dataframe en blocs pour faciliter les traitements
+    :param df:
+    :param chunk_size: taille du bloc
+    :return:
+    """
     print(f"size df: {df.shape}")
     start = 0
     length = df.shape[0]
@@ -388,6 +402,11 @@ def chunkify(df: pd.DataFrame, chunk_size: int):
 
 
 def corrige(cor_dict):
+    """
+    Lancement des corrections pour toutes les années et toutes les sources
+    :param cor_dict: dictionnaire des corrections
+    :return:
+    """
     logger.debug(f'start correction')
     DATA_PATH = os.getenv("MOUNTED_VOLUME_INSCRITS")
 

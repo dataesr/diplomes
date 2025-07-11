@@ -7,6 +7,11 @@ logger = get_logger(__name__)
 
 pd.options.mode.chained_assignment = None
 
+
+"""
+Programme avec toutes les fonctions de nettoyage des jeux de données
+"""
+
 ALL_RENTREES = list(range(2015, 2022))
 ALL_TYPES = ['result', 'inge', 'priv', 'ens', 'mana', 'enq26bis', 'culture']
 

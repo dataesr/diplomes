@@ -40,6 +40,10 @@ dict_d = {'UO_LIB': 'ETABLISSEMENT_ACTUEL_LIB'}
 
 
 def get_sources(annee):
+    """
+    :param annee:
+    :return: liste avec les sources par année
+    """
     assert (annee >= 2015)
     sources = ['result', 'ens', 'inge', 'priv']
     if annee > 2017:
@@ -51,6 +55,12 @@ def get_sources(annee):
 
 
 def read_diplome(source, year):
+    """
+    Lecture du fichier parquet
+    :param source: nom de la source des données (result, enq , inge,...)
+    :param year: année
+    :return: dataframe issu du fichier parquet
+    """
     os.chdir(DATA_PATH)
     # an = str(year)[2:4]
     logger.debug(f'reading parquet file diplomes for {source} {year} ...')
@@ -67,6 +77,12 @@ def read_diplome(source, year):
 
 
 def sise(df, cor_dic):
+    """
+    Somme groupée des diplômés par caractéristiques
+    :param df:
+    :param cor_dic:
+    :return:
+    """
     df = df.loc[df["EFFECTIF_TOT"] > 0]
     C_ETABLISSEMENT = pd.DataFrame(cor_dic['C_ETABLISSEMENTS'])
     op150 = C_ETABLISSEMENT[["ID_PAYSAGE", "OPERATEUR_LOLF_150"]]
@@ -147,6 +163,12 @@ def sise(df, cor_dic):
 
 
 def opendata19(df, cor_dic):
+    """
+    Ajout des données complémentaires pour la création du fichier open data
+    :param df:
+    :param cor_dic:
+    :return:
+    """
     E_FORM_ENS = pd.DataFrame(cor_dic['E_FORM_ENS'])
     F_RENTREES = pd.DataFrame(cor_dic['F_RENTREES'])
     communes = pd.DataFrame(cor_dic['LES_COMMUNES'])
@@ -381,6 +403,11 @@ def opendata19(df, cor_dic):
 
 
 def generate_od(cor_dic):
+    """
+    Lancement de la création du fichier open data
+    :param cor_dic:
+    :return:
+    """
     logger.debug(f'start generation')
     liste2 = []
     C_ETABLISSEMENT = pd.DataFrame(cor_dic['C_ETABLISSEMENTS'])
